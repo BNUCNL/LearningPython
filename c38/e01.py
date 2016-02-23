@@ -13,15 +13,17 @@
 """
 
 import time
-def timer(label='', trace=True): # On decorator args: retain args
-    def onDecorator(func): # On @: retain decorated func
-        def onCall(*args, **kargs): # On calls: call original
-            start = time.clock() # State is scopes + func attr
+
+
+def timer(label='', trace=True):  # On decorator args: retain args
+    def onDecorator(func):  # On @: retain decorated func（记住了func所指向的函数实现，因为func这个变量名的指向即将改变！）
+        def onCall(*args, **kargs):  # On calls: call original
+            start = time.clock()  # State is scopes + func attr
             result = func(*args, **kargs)
             elapsed = time.clock() - start
-            onCall.alltime += elapsed # 赋值函数的对象属性，用于替代self.alltime
+            onCall.alltime += elapsed  # 赋值函数的对象属性，用于替代self.alltime
             if trace:
-                format = '%s %s: %.5f, %.5f'
+                format = '%s %s: %.5f, %.5f'  # %.5f的意思是以浮点数形式保留小数点后五位的格式进行格式化
                 values = (label, func.__name__, elapsed, onCall.alltime)
                 print(format % values)
             return result
@@ -29,40 +31,42 @@ def timer(label='', trace=True): # On decorator args: retain args
         return onCall
     return onDecorator
 
-# 函数测试
 
-@timer(trace=True, label='[CCC]==>')
+# 函数测试
+@timer(trace=True, label='[CCC]==>')  # 等同于在listcomp定义之后的listcomp = timer(trace=True, label='[CCC]==>')(listcomp)
 def listcomp(N):
     return [x * 2 for x in range(N)]
 
-@timer(trace=True, label='[MMM]==>')
+
+@timer(trace=True, label='[MMM]==>')  # 同上类似
 def mapcall(N):
     return list(map((lambda x: x * 2), range(N)))
 
+
 for func in (listcomp, mapcall):
     result = func(5)
-    func(5000000) # 运行但没有print返回值，只是记录了运行时间
-    print(result) # 显示func(5)的返回值
-    print('allTime = %s\n' % func.alltime) # 显示运行的总时间
+    func(5000000)  # 运行但没有print返回值，只是记录了运行时间
+    print(result)  # 显示func(5)的返回值
+    print('allTime = %s\n' % func.alltime)  # 显示运行的总时间
+
 
 # 方法测试
-
 class Person:
     def __init__(self, name, pay):
         self.name = name
         self.pay = pay
 
     @timer()
-    def giveRaise(self, percent): # giveRaise = timer()(giveRaise)
+    def giveRaise(self, percent):  # giveRaise = timer()(giveRaise)
         self.pay *= (1.0 + percent)
-	
+
     @timer(label='**')
-    def lastName(self): # lastName = timer(...)(lastName)
+    def lastName(self):  # lastName = timer(...)(lastName)
         return self.name.split()[-1]
 
 bob = Person('Bob Smith', 50000)
 sue = Person('Sue Jones', 100000)
-bob.giveRaise(.10) # 会输出giveRaise的运行时间
+bob.giveRaise(.10)  # 会输出giveRaise的运行时间
 sue.giveRaise(.20)
 print(bob.name, ': ', bob.pay)
 print(sue.name, ': ', sue.pay)
